@@ -15,7 +15,7 @@
       font-family: Arial, sans-serif;
     }
     .wrap {
-      width: min(900px, 92vw);
+      width: min(950px, 94vw);
       display: grid;
       gap: 16px;
       padding: 18px;
@@ -41,20 +41,27 @@
     .spriteArea {
       display: grid;
       place-items: center;
-      gap: 10px;
+      gap: 12px;
       padding: 10px;
-      min-height: 330px;
+      min-height: 420px;
     }
+
+    /* ✅ Larger sprite */
     img {
-      width: 880px;
-      height: 880px;
-      image-rendering: smooth;
-      filter: drop-shadow(0 8px 12px rgba(0,0,0,.35));
+      width: 360px;
+      height: 360px;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 10px 16px rgba(0,0,0,.4));
     }
+    @media (max-width: 500px) {
+      img { width: 300px; height: 300px; }
+    }
+
     .nameLine {
       font-size: 14px;
       color: #d6d6d6;
       min-height: 20px;
+      text-transform: capitalize;
     }
 
     .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -72,11 +79,7 @@
     button.danger { border-color: #4a2b2b; background: #2a1f1f; }
     button.danger:hover { background: #332424; }
 
-    .stat {
-      display: grid;
-      gap: 6px;
-      font-size: 14px;
-    }
+    .stat { display: grid; gap: 8px; font-size: 14px; width: 100%; max-width: 520px; }
 
     .progress {
       width: 100%;
@@ -94,10 +97,7 @@
       transition: width 120ms linear;
     }
 
-    .timerBox {
-      display: grid;
-      gap: 10px;
-    }
+    .timerBox { display: grid; gap: 10px; }
     .timerReadout {
       font-size: 28px;
       letter-spacing: 0.5px;
@@ -135,11 +135,13 @@
   <div class="wrap">
     <div class="card">
       <h1>Press <span class="badge">SPACE</span> for the next Pokémon (no repeats per run)</h1>
-      <p class="muted">Run reshuffles only when you hit Reset or when you exhaust the full pool.</p>
+      <p class="muted">
+        Stopwatch auto-starts on your first draw. Reset Run also resets the stopwatch (and starts fresh when you draw again).
+      </p>
     </div>
 
     <div class="top">
-      <!-- LEFT: Sprite + Run Progress -->
+      <!-- LEFT -->
       <div class="card">
         <div class="spriteArea">
           <img id="sprite" src="" alt="Pokémon sprite" />
@@ -162,7 +164,7 @@
         </div>
       </div>
 
-      <!-- RIGHT: Stopwatch -->
+      <!-- RIGHT -->
       <div class="card timerBox">
         <div class="row" style="justify-content: space-between;">
           <div>
@@ -175,4 +177,14 @@
         </div>
 
         <div class="row">
-          <button class="primary" id="startPauseBtn">Start</b
+          <button class="primary" id="startPauseBtn">Start</button>
+          <button id="resetTimerBtn">Reset</button>
+        </div>
+
+        <div class="row" style="align-items: end;">
+          <label>
+            Target minutes (optional)
+            <input type="number" id="targetMinutes" min="0" step="0.5" value="0" />
+          </label>
+          <label>
+            Target seconds (optional)
