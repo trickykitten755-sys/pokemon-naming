@@ -1,78 +1,178 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>No-Repeat Pokémon Run</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>No-Repeat Pokémon Run + Timer</title>
   <style>
     body {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
       background: #111;
-      color: white;
-      font-family: Arial;
-      flex-direction: column;
+      color: #fff;
+      font-family: Arial, sans-serif;
+    }
+    .wrap {
+      width: min(900px, 92vw);
+      display: grid;
+      gap: 16px;
+      padding: 18px;
+    }
+    .card {
+      background: #1b1b1b;
+      border: 1px solid #2a2a2a;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,.25);
+    }
+    h1 { margin: 0 0 6px; font-size: 20px; }
+    .muted { color: #bdbdbd; font-size: 13px; margin: 0; }
+    .top {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1.2fr 1fr;
+    }
+    @media (max-width: 760px) {
+      .top { grid-template-columns: 1fr; }
     }
 
-    img {
-      width: 200px;
-      height: 200px;
-      image-rendering: pixelated;
+    .spriteArea {
+      display: grid;
+      place-items: center;
+      gap: 10px;
+      padding: 10px;
+      min-height: 330px;
     }
+    img {
+      width: 880px;
+      height: 880px;
+      image-rendering: smooth;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,.35));
+    }
+    .nameLine {
+      font-size: 14px;
+      color: #d6d6d6;
+      min-height: 20px;
+    }
+
+    .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    button {
+      border: 1px solid #333;
+      background: #242424;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover { background: #2b2b2b; }
+    button:active { transform: translateY(1px); }
+    button.primary { border-color: #3a3a3a; background: #2a2a2a; }
+    button.danger { border-color: #4a2b2b; background: #2a1f1f; }
+    button.danger:hover { background: #332424; }
+
+    .stat {
+      display: grid;
+      gap: 6px;
+      font-size: 14px;
+    }
+
+    .progress {
+      width: 100%;
+      height: 10px;
+      background: #232323;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #2f2f2f;
+    }
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: #ffffff;
+      opacity: 0.85;
+      transition: width 120ms linear;
+    }
+
+    .timerBox {
+      display: grid;
+      gap: 10px;
+    }
+    .timerReadout {
+      font-size: 28px;
+      letter-spacing: 0.5px;
+      font-variant-numeric: tabular-nums;
+    }
+    label {
+      font-size: 13px;
+      color: #cfcfcf;
+      display: grid;
+      gap: 6px;
+    }
+    input[type="number"]{
+      width: 140px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid #333;
+      background: #141414;
+      color: #fff;
+      outline: none;
+    }
+    .badge {
+      font-size: 12px;
+      padding: 4px 8px;
+      border: 1px solid #333;
+      border-radius: 999px;
+      color: #d8d8d8;
+      background: #181818;
+    }
+    .badge.ok { border-color: #2f3a2f; background:#161b16; }
+    .badge.warn { border-color: #4a3f2a; background:#1b1913; }
   </style>
 </head>
 
 <body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Press <span class="badge">SPACE</span> for the next Pokémon (no repeats per run)</h1>
+      <p class="muted">Run reshuffles only when you hit Reset or when you exhaust the full pool.</p>
+    </div>
 
-<h2>Press SPACE for a random Pokémon (no repeats per run)</h2>
-<img id="sprite" src="" alt="Pokémon sprite">
+    <div class="top">
+      <!-- LEFT: Sprite + Run Progress -->
+      <div class="card">
+        <div class="spriteArea">
+          <img id="sprite" src="" alt="Pokémon sprite" />
+          <div class="nameLine" id="pokeLabel"></div>
 
-<script>
-const sprite = document.getElementById("sprite");
-const TOTAL_POKEMON = 1025;
+          <div class="stat">
+            <div class="row">
+              <span class="badge" id="runCount">Seen: 0 / 1025</span>
+              <span class="badge" id="runRemain">Remaining: 1025</span>
+            </div>
+            <div class="progress" aria-label="run progress">
+              <div class="bar" id="runBar"></div>
+            </div>
 
-let pool = [];
+            <div class="row">
+              <button class="primary" id="nextBtn" title="Same as pressing Space">Next (Space)</button>
+              <button class="danger" id="resetRunBtn">Reset Run</button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-// Fisher–Yates shuffle
-function shuffle(array) {
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-}
+      <!-- RIGHT: Stopwatch -->
+      <div class="card timerBox">
+        <div class="row" style="justify-content: space-between;">
+          <div>
+            <div class="muted">Stopwatch</div>
+            <div class="timerReadout" id="timer">00:00.0</div>
+          </div>
+          <div class="row">
+            <span class="badge ok" id="timerStatus">Ready</span>
+          </div>
+        </div>
 
-// Create a new run
-function resetPool() {
-  pool = Array.from({ length: TOTAL_POKEMON }, (_, i) => i + 1);
-  shuffle(pool);
-  console.log("New run started!");
-}
-
-async function showNextPokemon() {
-  if (pool.length === 0) resetPool();
-
-  const id = pool.pop();
-
-  try {
-    const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
-    const data = await response.json();
-
-    sprite.src = data.sprites.front_default;
-  } catch (err) {
-    console.error("Error fetching Pokémon:", err);
-  }
-}
-
-// Start first run
-resetPool();
-
-document.addEventListener("keydown", (event) => {
-  if (event.code === "Space") {
-    event.preventDefault();
-    showNextPokemon();
-  }
-});
-</script>
-
-</body>
-</html>
+        <div class="row">
+          <button class="primary" id="startPauseBtn">Start</b
